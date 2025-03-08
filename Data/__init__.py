@@ -1,0 +1,1 @@
+from .data import comp_list
