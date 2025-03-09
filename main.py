@@ -1,7 +1,7 @@
 import streamlit as st 
 import pandas as pd
-import time
 import Data
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.title("辯論助手")
 
@@ -59,15 +59,5 @@ if st.session_state["success_add_tag"] == 1:
     st.sidebar.success("新增成功")
     st.session_state["success_add_tag"] = 0
 
-
-
-tb = pd.DataFrame(
-    {
-        "盃賽" : ["青聲說"], 
-        "持方" : ["中性"]
-    }
-)
-
-st.write(tb)
-
+tb = AgGrid(Data.test_database)
 st.divider()
