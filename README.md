@@ -1,1 +1,1 @@
-"# DebateAssistiveTool" 
+# DebateAssistiveTool
