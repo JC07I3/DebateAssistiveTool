@@ -1,4 +1,6 @@
+bs4
 pip-chill
 pysocks
 pytube
-streamlit
+selenium
+streamlit-aggrid
