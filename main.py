@@ -1,7 +1,10 @@
 import streamlit as st 
 import pandas as pd
 import Data
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
+import config
+
+st.set_page_config(page_title="辯論資料助手", layout="wide")
 
 st.title("辯論助手")
 
@@ -59,5 +62,9 @@ if st.session_state["success_add_tag"] == 1:
     st.sidebar.success("新增成功")
     st.session_state["success_add_tag"] = 0
 
-tb = AgGrid(Data.test_database, fit_columns_on_grid_load=True)
+gb = GridOptionsBuilder.from_dataframe(Data.test_database)
+gb = config.gen_main_gb(gb)
+g_op = gb.build()
+
+tb = AgGrid(Data.test_database, gridOptions=g_op, fit_columns_on_grid_load=True, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS )
 st.divider()
