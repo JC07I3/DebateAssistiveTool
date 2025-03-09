@@ -59,5 +59,5 @@ if st.session_state["success_add_tag"] == 1:
     st.sidebar.success("新增成功")
     st.session_state["success_add_tag"] = 0
 
-tb = AgGrid(Data.test_database)
+tb = AgGrid(Data.test_database, fit_columns_on_grid_load=True)
 st.divider()
