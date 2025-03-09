@@ -18,7 +18,7 @@ side_chosen = st.sidebar.selectbox("持方", side_options, index=0)
 def add_option(new_option):
     Data.comp_list.insert(0, str(new_option))
 
-if comp_name == "輸入其他盃賽":
+if comp_name == "...輸入其他":
     enter_comp_option = st.sidebar.text_input("輸入盃賽")
     if enter_comp_option:
         if enter_comp_option in Data.comp_list:
@@ -27,15 +27,6 @@ if comp_name == "輸入其他盃賽":
             add_option(enter_comp_option)
             st.rerun()
             
-if "data_n" not in st.session_state:
-    st.session_state["data_n"] = ""
-
-if "data_l" not in st.session_state:
-    st.session_state["data_l"] = ""
-
-def clear_data_input():
-    return
-
 def submit():
     if data_name == "" or data_link == "":
         st.sidebar.error("輸入不得為空喔!!!")
@@ -44,17 +35,31 @@ def submit():
 data_form = st.sidebar.form(key="store_data", clear_on_submit=True)
 
 with data_form:
-    data_name = data_form.text_input("輸入資料名稱", max_chars=50, key="data_n")
+    data_name = data_form.text_input("輸入資料名稱", max_chars=50)
 
-    data_link = data_form.text_input("輸入資料連結", key = "data_l")
+    data_link = data_form.text_input("輸入資料連結")
 
-    confirm_, clear_ = data_form.columns(2)
+    data_tags = data_form.multiselect("標籤", Data.tags_list)
 
-    with confirm_:
-        submit_button = data_form.form_submit_button("確認", on_click=submit, use_container_width=True)
+    submit_button = data_form.form_submit_button("確認", on_click=submit, use_container_width=True)
 
-    with clear_:
-        clear_button = data_form.form_submit_button("清除", on_click=clear_data_input, use_container_width=True)
+    clear_button = data_form.form_submit_button("清除", use_container_width=True)
+
+if "success_add_tag" not in st.session_state:
+    st.session_state["success_add_tag"] = 0
+
+new_tag = st.sidebar.text_input("輸入新標籤")
+if new_tag:
+    if new_tag not in Data.tags_list:
+        Data.tags_list.insert(0, str(new_tag))
+        st.session_state["success_add_tag"] = 1
+        st.rerun()
+
+if st.session_state["success_add_tag"] == 1:
+    st.sidebar.success("新增成功")
+    st.session_state["success_add_tag"] = 0
+
+
 
 tb = pd.DataFrame(
     {

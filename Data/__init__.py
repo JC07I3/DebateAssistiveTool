@@ -1,1 +1,1 @@
-from .data import comp_list
+from .data import comp_list, tags_list
