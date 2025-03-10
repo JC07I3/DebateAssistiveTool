@@ -8,8 +8,11 @@ def gen_main_gb(gb):
 #        filter="agNumberColumnFilter",  # 过滤器（数字类型）
         sortable=True,      # 是否允许排序
 #        width=500,          # 列宽度
-        cellStyle={'color': 'black', 'font-size': '20px'}  # 自定义样式
+         # 自定义样式
     )
-    gb.configure_default_column(editable=False, resizable=True, filterable=True)
-
+    gb.configure_default_column(editable=False, resizable=True, filterable=True, cellStyle={'font-size': '20px'} )
+    gb.configure_pagination(enabled=True, paginationPageSize=10)
+    gb.configure_selection("multiple", use_checkbox=True)
+    gb.configure_grid_options(domLayout="autoHeight", rowHeight=40)
+    gb.configure_selection("single", use_checkbox=True)
     return gb
