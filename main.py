@@ -39,7 +39,7 @@ def submit():
 data_form = st.sidebar.form(key="store_data", clear_on_submit=True)
 
 with data_form:
-    data_name = data_form.text_input("輸入資料名稱", max_chars=50)
+    data_name = data_form.text_input("輸入資料標題", max_chars=50)
 
     data_link = data_form.text_input("輸入資料連結")
 
@@ -62,6 +62,31 @@ if new_tag:
 if st.session_state["success_add_tag"] == 1:
     st.sidebar.success("新增成功")
     st.session_state["success_add_tag"] = 0
+
+
+
+filter_name = ""
+filter_side = ""
+filter_tags = []
+
+def filter_submit():
+    return
+
+with st.expander("篩選資料"):
+    data_filter = st.form(key="data_filter", clear_on_submit=False)
+    with data_filter:
+        col1, col2 = data_filter.columns(2)
+        with col1:
+            filter_name = st.text_input("輸入資料標題")
+        with col2:
+            filter_side = st.selectbox("選擇持方", side_options)
+        filter_tags = st.multiselect("選擇標籤", Data.tags_list)
+
+        c1, c2 = data_filter.columns(2)
+        with c1:
+            filter_submit_button = data_filter.form_submit_button("確認", on_click=filter_submit, use_container_width=True)
+        with c2:
+            filter_clear_button = data_filter.form_submit_button("清除", use_container_width=True)
 
 gb = GridOptionsBuilder.from_dataframe(Data.test_database)
 gb = config.gen_main_gb(gb)
