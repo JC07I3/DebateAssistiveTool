@@ -12,11 +12,10 @@ st.sidebar.write("## 儲存資料")
 
 com_sp, side_sp = st.sidebar.columns(2)
 
-side_options = ["全部", "正方", "反方", "中性"]
+side_options = ["正方", "反方", "中性"]
 
 comp_name = st.sidebar.selectbox("盃賽", Data.comp_list, index=0)
 
-side_chosen = st.sidebar.selectbox("持方", side_options, index=0)
 
 def add_option(new_option):
     Data.comp_list.insert(0, str(new_option))
@@ -29,7 +28,9 @@ if comp_name == "...輸入其他":
         else:
             add_option(enter_comp_option)
             st.rerun()
-            
+
+side_chosen = st.sidebar.selectbox("持方", side_options, index=0)
+           
 def submit():
     if data_name == "" or data_link == "":
         st.sidebar.error("輸入不得為空喔!!!")
