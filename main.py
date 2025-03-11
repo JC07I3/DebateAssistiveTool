@@ -91,6 +91,26 @@ with st.expander("篩選資料"):
 gb = GridOptionsBuilder.from_dataframe(Data.test_database)
 gb = config.gen_main_gb(gb)
 g_op = gb.build()
+g_op["paginationPageSizeSelector"] = [10, 20, 50, 100]
 
-tb = AgGrid(Data.test_database, gridOptions=g_op, fit_columns_on_grid_load=True, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS )
-st.divider()
+tb = AgGrid(Data.test_database, gridOptions=g_op, fit_columns_on_grid_load=True, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS, domLayout='autoHeight' )
+selected_rows = tb["selected_rows"]
+'''
+if selected_rows is not None:
+    selected_row = selected_rows 
+    st.write("## 修改資料")
+    new_title = st.text_input("標題", selected_row["title"])
+    new_position = st.text_input("持方", selected_row["持方"])
+    new_tag = st.text_input("標籤", selected_row["標籤"])
+
+    if st.button("恢復"):
+        st.experimental_rerun()  
+
+    if st.button("確認"):
+        selected_index = tb.index[tb["標題"] == selected_row["標題"]].tolist()[0] 
+        tb.loc[selected_index, "標題"] = new_title
+        tb.loc[selected_index, "持方"] = new_position
+        tb.loc[selected_index, "標籤"] = new_tag
+
+        st.experimental_rerun()
+'''
