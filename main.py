@@ -94,23 +94,25 @@ g_op = gb.build()
 g_op["paginationPageSizeSelector"] = [10, 20, 50, 100]
 
 tb = AgGrid(Data.test_database, gridOptions=g_op, fit_columns_on_grid_load=True, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS, domLayout='autoHeight' )
-selected_rows = tb["selected_rows"]
-'''
-if selected_rows is not None:
-    selected_row = selected_rows 
-    st.write("## 修改資料")
-    new_title = st.text_input("標題", selected_row["title"])
-    new_position = st.text_input("持方", selected_row["持方"])
-    new_tag = st.text_input("標籤", selected_row["標籤"])
+selected = tb["selected_rows"]
 
-    if st.button("恢復"):
-        st.experimental_rerun()  
+if selected is not None:
+    st.write("# 修改資料")
+    new_title = st.text_input(r"$\textbf{\Large 標題}$", value = str(selected.iloc[0, 0]))
+    new_side = st.text_input(r"$\textbf{\Large 持方}$", value = str(selected.iloc[0, 1]))
+    new_tag = st.text_input(r"$\textbf{\Large 標籤}$", value = str(selected.iloc[0, 2]))
 
-    if st.button("確認"):
-        selected_index = tb.index[tb["標題"] == selected_row["標題"]].tolist()[0] 
-        tb.loc[selected_index, "標題"] = new_title
-        tb.loc[selected_index, "持方"] = new_position
-        tb.loc[selected_index, "標籤"] = new_tag
+    editc1, editc2 = st.columns(2)
+    
+    with editc2:
+        if st.button("取消", use_container_width=True):
+            st.rerun()  
 
-        st.experimental_rerun()
-'''
+    with editc1:
+        if st.button("確認", use_container_width=True):
+        #    selected_index = tb.index[tb["標題"] == selected_row["標題"]].tolist()[0] 
+        #    tb.loc[selected_index, "標題"] = new_title
+        #    tb.loc[selected_index, "持方"] = new_position
+        #    tb.loc[selected_index, "標籤"] = new_tag
+
+            st.rerun()
