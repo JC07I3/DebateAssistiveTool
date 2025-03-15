@@ -10,11 +10,11 @@ st.title("辯論助手")
 
 st.sidebar.write("## 儲存資料")
 
-com_sp, side_sp = st.sidebar.columns(2)
+com_sp, side_sp = st.columns(2)
 
 side_options = ["正方", "反方", "中性"]
 
-comp_name = st.sidebar.selectbox("盃賽", Data.comp_list, index=0)
+comp_name = st.selectbox("盃賽", Data.comp_list, index=0)
 
 
 def add_option(new_option):
@@ -29,7 +29,7 @@ if comp_name == "...輸入其他":
             add_option(enter_comp_option)
             st.rerun()
 
-side_chosen = st.sidebar.selectbox("持方", side_options, index=0)
+side_chosen = st.selectbox("持方", side_options, index=0)
            
 def submit():
     if data_name == "" or data_link == "":
@@ -44,6 +44,8 @@ with data_form:
     data_link = data_form.text_input("輸入資料連結")
 
     data_tags = data_form.multiselect("標籤", Data.tags_list)
+
+    data_statement = data_form.text_area("輸入資料摘要", height=200)
 
     submit_button = data_form.form_submit_button("確認", on_click=submit, use_container_width=True)
 
@@ -102,17 +104,10 @@ if selected is not None:
     new_side = st.text_input(r"$\textbf{\Large 持方}$", value = str(selected.iloc[0, 1]))
     new_tag = st.text_input(r"$\textbf{\Large 標籤}$", value = str(selected.iloc[0, 2]))
 
-    editc1, editc2 = st.columns(2)
-    
-    with editc2:
-        if st.button("取消", use_container_width=True):
-            st.rerun()  
+    if st.button("確認", use_container_width=True):
+    #    selected_index = tb.index[tb["標題"] == selected_row["標題"]].tolist()[0] 
+    #    tb.loc[selected_index, "標題"] = new_title
+    #    tb.loc[selected_index, "持方"] = new_position
+    #    tb.loc[selected_index, "標籤"] = new_tag
 
-    with editc1:
-        if st.button("確認", use_container_width=True):
-        #    selected_index = tb.index[tb["標題"] == selected_row["標題"]].tolist()[0] 
-        #    tb.loc[selected_index, "標題"] = new_title
-        #    tb.loc[selected_index, "持方"] = new_position
-        #    tb.loc[selected_index, "標籤"] = new_tag
-
-            st.rerun()
+        st.rerun()
