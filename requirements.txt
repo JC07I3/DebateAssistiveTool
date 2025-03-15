@@ -1,6 +1,10 @@
 bs4
+mysql
 pip-chill
+psycopg2
+pymysql
 pysocks
 pytube
 selenium
+sqlalchemy
 streamlit-aggrid
