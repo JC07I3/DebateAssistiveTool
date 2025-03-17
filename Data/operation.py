@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
 import pandas as pd
 
-DATABASE_URL = "sqlite:///C:\Users\chens\OneDrive\桌面\專案\DebateAssistiveTool\data.db"
+DATABASE_URL = "sqlite:///data.db"
 engine = create_engine(DATABASE_URL, echo=True)
 
 Base = declarative_base()
