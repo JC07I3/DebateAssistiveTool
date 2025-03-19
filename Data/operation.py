@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, or_
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import scoped_session
 import datetime
 import pandas as pd
+import streamlit as st
 
 DATABASE_URL = "sqlite:///data.db"
-engine = create_engine(DATABASE_URL, echo=True)
 
 Base = declarative_base()
 
@@ -18,21 +19,31 @@ class Debate(Base):
     content = Column(Text)
     side = Column(String)
     contest = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now().date())
 
-Base.metadata.create_all(bind=engine)
+@st.cache_resource
+def get_engine():
+    return create_engine(DATABASE_URL, echo=True)
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False)
+@st.cache_resource
+def get_session():
+    engine = get_engine()
+    Base.metadata.create_all(bind=engine)
+    return scoped_session(sessionmaker(bind=engine, autocommit=False))
+
+Session = get_session()
 
 def add_data(title, link, tags, content, side, contest):
-    db = SessionLocal()
+    db = Session()
     new_debate = Debate(title=title, link=link, tags=tags, content=content, side=side, contest=contest)
     db.add(new_debate)
     db.commit()
     db.close()
+    st.cache_data.clear()
 
+@st.cache_data
 def search_data(title=None, tags=None, content=None, side=None, contest=None):
-    db = SessionLocal()
+    db = Session()
     query = db.query(Debate)
 
     if title:
@@ -51,8 +62,8 @@ def search_data(title=None, tags=None, content=None, side=None, contest=None):
     return result
 
 def update_data(debate_id, title=None, link=None, tags=None, content=None, side=None, contest=None):
-    db = SessionLocal()
-    debate = db.query(Debate).filter(Debate.id == debate_id).first()
+    db = Session()
+    debate = db.query(Debate).filter(Debate.id == int(debate_id)).first()
     if debate:
         if title:
             debate.title = title
@@ -68,14 +79,16 @@ def update_data(debate_id, title=None, link=None, tags=None, content=None, side=
             debate.contest = contest
         db.commit()
     db.close()
+    st.cache_data.clear()
 
 def delete_data(debate_id):
-    db = SessionLocal()
-    debate = db.query(Debate).filter(Debate.id == debate_id).first()
-    if debate:
-        db.delete(debate)
-        db.commit()
+    db = Session()
+    data_tmp = db.query(Debate).filter(Debate.id == int(debate_id)).first()
+    if data_tmp:
+        db.delete(data_tmp)
+    db.commit()
     db.close()
+    st.cache_data.clear()
 
 # 測試功能
 if __name__ == "__main__":

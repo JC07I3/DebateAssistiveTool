@@ -37,7 +37,7 @@ side_chosen = st.selectbox("持方", side_options, index=0)
            
 data_form = st.sidebar.form(key="store_data", clear_on_submit=True)
 
-@st.cache_data()
+@st.cache_data
 def get_grid(name, side, tags):
     return search_data(name, tags, side=side, contest=comp_name)
 
@@ -56,6 +56,7 @@ with data_form:
     submit_button = data_form.form_submit_button("確認", use_container_width=True)
     
     clear_button = data_form.form_submit_button("清除", use_container_width=True)
+
 
     if submit_button:
         if data_name == "" or data_link == "":
@@ -108,14 +109,25 @@ g_op["paginationPageSizeSelector"] = [10, 20, 50, 100]
 tb = AgGrid(st.session_state["data_grid"], gridOptions=g_op, fit_columns_on_grid_load=True, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS, domLayout='autoHeight' )
 selected = tb["selected_rows"]
 
+
 if selected is not None:
     st.write("# 修改資料")
     selected_row = selected 
-    new_title = st.text_input(r"$\textbf{\Large 標題}$", value=selected_row.iloc([0, 0]))
-    new_side = st.text_input(r"$\textbf{\Large 持方}$", value=selected_row.iloc([0, 1]))
-    new_tag = st.text_input(r"$\textbf{\Large 標籤}$", value=selected_row.iloc([0, 2]))
+    st.write(selected_row)
+    st.write(selected_row.iloc[0]["id"])
+    new_title = st.text_input(r"$\textbf{\Large 標題}$", value=selected_row.iloc[0]["title"])
+    new_side = st.text_input(r"$\textbf{\Large 持方}$", value=selected_row.iloc[0]["side"])
+    new_tag = st.text_input(r"$\textbf{\Large 標籤}$", value=selected_row.iloc[0]["tags"])
 
     if st.button("確認", use_container_width=True):
-        update_data(selected_row["id"], new_title, new_side, new_tag)
+        update_data(selected_row.iloc[0]["id"], new_title, new_side, new_tag)
         st.cache_data.clear()
+        st.session_state["data_grid"] = get_grid(None, None, None)
+        st.rerun()
+    if st.button("刪除", use_container_width=True):
+        print("delete", selected_row.iloc[0]["id"])
+        delete_data(selected_row.iloc[0]["id"])
+        print("delete comp")
+        st.cache_data.clear()
+        st.session_state["data_grid"] = get_grid(None, None, None)
         st.rerun()
