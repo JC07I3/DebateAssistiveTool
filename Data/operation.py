@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm import scoped_session
 import datetime
 import pandas as pd
-import streamlit as st
+from functools import lru_cache
 
 DATABASE_URL = "sqlite:///data.db"
 
@@ -21,15 +21,23 @@ class Debate(Base):
     contest = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now().date())
 
-@st.cache_resource
-def get_engine():
-    return create_engine(DATABASE_URL, echo=True)
+eng = None
+session = None
 
-@st.cache_resource
+def get_engine():
+    global eng
+    if eng is None:
+        eng = create_engine(DATABASE_URL, echo=True)
+    return eng
+
 def get_session():
+    global session
+    if session is not None:
+        return session
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
-    return scoped_session(sessionmaker(bind=engine, autocommit=False))
+    session = scoped_session(sessionmaker(bind=engine, autocommit=False))
+    return session 
 
 Session = get_session()
 
@@ -39,9 +47,9 @@ def add_data(title, link, tags, content, side, contest):
     db.add(new_debate)
     db.commit()
     db.close()
-    st.cache_data.clear()
+    search_data.cache_clear()
 
-@st.cache_data
+@lru_cache(maxsize=128)
 def search_data(title=None, tags=None, content=None, side=None, contest=None):
     db = Session()
     query = db.query(Debate)
@@ -79,7 +87,7 @@ def update_data(debate_id, title=None, link=None, tags=None, content=None, side=
             debate.contest = contest
         db.commit()
     db.close()
-    st.cache_data.clear()
+    search_data.cache_clear()
 
 def delete_data(debate_id):
     db = Session()
@@ -88,7 +96,7 @@ def delete_data(debate_id):
         db.delete(data_tmp)
     db.commit()
     db.close()
-    st.cache_data.clear()
+    search_data.cache_clear()
 
 # 測試功能
 if __name__ == "__main__":

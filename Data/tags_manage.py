@@ -7,11 +7,12 @@ DATABASE_URL = "sqlite:///data.db"
 
 Base = declarative_base()
 
-class Contest(Base):
-    __tablename__ = "contests"
+class Tag(Base):
+    __tablename__ = "tags"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
+    name = Column(String)
+    contest = Column(String)
 
 eng = None
 session = None
@@ -33,30 +34,30 @@ def get_session():
 
 Session = get_session()
 
-def add_contest(name):
+def add_tag(name, contest):
     db = Session()
-    new_contest = Contest(name=name)
-    db.add(new_contest)
+    new_tag = Tag(name=str(name), contest=str(contest))
+    db.add(new_tag)
     db.commit()
     db.close()
-    get_contests.cache_clear()
+    get_tags.cache_clear()
 
-def remove_contest(name):
+def remove_tag(name, contest):
     db = Session()
-    qry = db.query(Contest).filter(Contest.name == str(name)).first()
+    qry = db.query(Tag).filter(Tag.name == str(name) and Tag.contest == str(contest)).first()
     if qry:
         db.delete(qry)
     db.commit()
     db.close()
-    get_contests.cache_clear()
+    get_tags.cache_clear()
 
-@lru_cache
-def get_contests():
+@lru_cache(maxsize=128)
+def get_tags(contest):
     db = Session()
-    qry = db.query(Contest)
-    ret = [i.name for i in qry]
+    qry = db.query(Tag).filter(Tag.contest == str(contest)).all()
+    ret = []
+    if qry:
+        ret = [i.name for i in qry]
     db.close()
     return list(reversed(ret))
 
-if __name__ == "__main__":
-    remove_contest("123")
