@@ -2,8 +2,10 @@ bs4
 mysql
 pip-chill
 psycopg2
+psycopg2-binary
 pymysql
 pysocks
+python-dotenv
 pytube
 selenium
 sqlalchemy
