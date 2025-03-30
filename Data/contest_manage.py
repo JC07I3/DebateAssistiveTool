@@ -2,8 +2,12 @@ from sqlalchemy import Integer, String, Column, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm import scoped_session
 from functools import lru_cache
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = "sqlite:///data.db"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 Base = declarative_base()
 

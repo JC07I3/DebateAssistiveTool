@@ -142,9 +142,9 @@ with store_tab:
     if new_tag:
         if "$" in new_tag:
             st.warning("標籤不能包含$符號")
-        else if new_tag == "":
+        elif new_tag == "":
             st.warning("標籤不能為空")
-        else if new_tag not in get_tags(comp_name):
+        elif new_tag not in get_tags(comp_name):
             add_tag(new_tag, comp_name)
             st.session_state["success_add_tag"] = 1
             st.rerun()

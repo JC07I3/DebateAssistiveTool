@@ -4,8 +4,11 @@ from sqlalchemy.orm import scoped_session
 import datetime
 import pandas as pd
 from functools import lru_cache
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-DATABASE_URL = "sqlite:///data.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 Base = declarative_base()
 
