@@ -19,7 +19,7 @@ class Debate(Base):
     content = Column(Text)
     side = Column(String)
     contest = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.now().date())
+    created_at = Column(DateTime, default=datetime.datetime.now())
 
 eng = None
 session = None
@@ -47,19 +47,20 @@ def add_data(title, link, tags, content, side, contest):
     db.add(new_debate)
     db.commit()
     db.close()
-    search_data.cache_clear()
 
-@lru_cache(maxsize=128)
+#@lru_cache(maxsize=128)
 def search_data(title=None, tags=None, content=None, side=None, contest=None):
+    if side == "全部":
+        side = None
     db = Session()
     query = db.query(Debate)
 
     if title:
-        query = query.filter(or_(Debate.title.contains(title)))
+        query = query.filter(or_(Debate.title.contains(title), Debate.title.like(title)))
     if tags:
-        query = query.filter(Debate.tags.contains(tags))
+        query = query.filter(or_(Debate.tags.contains(tag) for tag in tags.split('$')))
     if content:
-        query = query.filter(or_(Debate.content.contains(content)))
+        query = query.filter(or_(Debate.content.contains(content), Debate.content.like(content)))
     if side:
         query = query.filter(Debate.side == side)
     if contest:
@@ -87,7 +88,6 @@ def update_data(debate_id, title=None, link=None, tags=None, content=None, side=
             debate.contest = contest
         db.commit()
     db.close()
-    search_data.cache_clear()
 
 def delete_data(debate_id):
     db = Session()
@@ -96,7 +96,6 @@ def delete_data(debate_id):
         db.delete(data_tmp)
     db.commit()
     db.close()
-    search_data.cache_clear()
 
 # 測試功能
 if __name__ == "__main__":
