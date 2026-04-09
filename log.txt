@@ -1,0 +1,73 @@
+# 專案重構與更新日誌 (Project Refactoring & Update Log)
+
+以下是近期由 AI 協助進行的所有主要更改與新增功能的總結：
+
+## 1. 資料庫架構重構 (Database Architecture Refactoring)
+- **新增 `Data/models.py`**：將資料庫轉換為正規化的關聯式結構，使用 SQLAlchemy ORM (`declarative_base`) 建立資料表模型 (`Contest`, `Argument`, `Tag`, `argument_tag_association`)。
+- **實作多對多關聯**：在論點 (Argument) 與標籤 (Tag) 之間建立了多對多 (Many-to-Many) 的關聯，讓資料查詢更靈活。
+- **新增 `Data/database.py`**：
+  - 實作了強健的資料庫連線管理。
+  - 加入 `get_db_session` Context Manager (上下文管理器)，確保資料庫 Session 能夠正確關閉並在發生錯誤時自動 Rollback。
+  - 新增對遠端 PostgreSQL 資料庫的支援 (配合 Render 部署)，並保留本地端 SQLite (`sqlite:///data.db`) 作為無連線字串時的備用方案。
+- **移除廢棄檔案**：移除了舊的 `Data/datab.py`，統整資料庫操作。
+
+## 2. 後端邏輯改寫 (Backend Logic Updates)
+- **修改 `Data/operation.py`, `Data/contest_manage.py`, `Data/tags_manage.py`**：
+  - 將原本基於 Pandas 和純 SQL 查詢的操作，全面改寫為 SQLAlchemy ORM 的物件導向操作。
+  - 優化標籤 (Tag) 前綴的生成與論點 (Argument) 查詢、新增、刪除的邏輯，加強穩定性。
+
+## 3. 前端介面與狀態管理優化 (Streamlit UI & State Management)
+- **修改 `app.py`**：
+  - **狀態管理重構**：全面改用 `st.session_state` 來管理應用的狀態，解決了原本依賴 `st.cache_data.clear()` 所造成的不穩定問題，實現更流暢的動態介面刷新。
+  - **支援富文本 (Rich Text)**：在論點預覽中加入了 Markdown 與 HTML 語法的高亮與渲染支援。
+- **新增 `config/constants.py`**：將所有 UI 文字、預設設定等常數提取至獨立檔案，保持 `app.py` 程式碼的整潔與可維護性。
+
+## 4. 新增資料視覺化儀表板 (Data Visualization Dashboards)
+- **修改 `app.py`**：加入全新的視覺化儀表板 (Dashboard) 頁籤。
+- **整合 Plotly 套件**：實作互動式的圓餅圖 (Pie Chart) 與長條圖 (Bar Chart)，用來視覺化呈現各個標籤 (Tag) 在論點中的分佈與數據統計。
+
+## 5. 部署與環境配置修復 (Deployment & Environment fixes)
+- **修改 `requirements.txt`**：新增了 `SQLAlchemy` 等必要的相依套件。
+- **修復資料庫連線錯誤**：解決了在 Render 部署時讀取不到 HOST 或發生 `OperationalError` 的問題，確保環境變數 `DATABASE_URL` 能被正確解析以連線至 PostgreSQL。
+
+## 6. 文件與說明 (Documentation)
+- **新增/更新 `README.md`**：撰寫了完整且專業的專案說明文件，包含專案簡介、功能展示、本地端執行步驟 (Docker / 一般環境)，以及 Render 部署指南。
+
+## 7. 進階搜尋過濾系統 (Advanced Search & Filter System)
+- **新增「全文檢索」功能**：
+  - 修改 `Data/operation.py` 的 `search_data`，加入 `keyword` 參數。支援同時對「標題 (title)」與「摘要內文 (content)」進行 `LIKE` 模糊比對。
+  - 修改 `app.py` 介面，將原本只能搜尋標題的欄位更新為「全文檢索字詞 (搜尋標題或摘要)」，並將相關狀態變數 (`filter_name`) 重新命名為更貼切的 `filter_keyword`。
+
+## 8. 帳號系統與多人協作 (Authentication & Access Control)
+- **新增帳號註冊與登入支援**：
+  - 在 `requirements.txt` 中引入 `bcrypt` 開源加密安全套件。
+  - 新增 `Data/auth.py` 提供基礎的建立帳號 (雜湊演算法加密密碼) 與登入狀態驗證。
+  - 前端 `app.py` 中加入了擋板機制，使用者必須透過登入或註冊頁籤進行身分驗證，才能看見側邊欄與各類操作頁籤。
+- **針對盃賽實作存取控制**：
+  - 更新 `Data/models.py`，新增 `User` 模型與 `contest_user_mapping` 表，從而將盃賽 (Contest) 綁定於特定使用者。
+  - 登入後側邊欄只會顯示該名使用者「有權參與」的盃賽。
+  - 實作「管理員與協作」功能：在盃賽介面側邊欄中可以輸入另外一名使用者的帳號名稱，將其加入該盃賽的協同編輯清單，讓他們登入後也能看見並編輯。
+
+## 9. 介面清理與系統規範 (UI Cleanup & Standard)
+- **介面去表情化**：
+  - 全面移除各頁籤 (如登入、註冊等) 的所有表情符號。
+  - 確立後續開發規範：開發中禁用一切表情符號，保持嚴肅專業的 UI，除非明確要求。
+
+## 10. 歷史版本控制與審計日誌 (Argument Version Control)
+- **變更追蹤**：
+  - 新增 `DebateHistory` 資料表以紀錄修改軌跡。
+  - 在 `update_data` 處理邏輯中加入攔截程序：遇到標題、內容或持方發生的變動時，自動建立一份夾帶編輯者 ID 與時間戳記的「舊版本副本」。
+- **歷史清單呈現**：
+  - 引進「版本列表」檢視模式：在編輯選中資料的介面下方加入一個收合式儀表板。一旦展開，便會按照修改時間由近至遠，列出包含修改者、舊標題、舊持方與舊摘要在內的詳細清單，實現具容錯能力的嚴謹文件備份功能。
+
+## 11. 專屬文字庫：筆記與講稿系統 (Notes & Scripts Management)
+- **資料表與結構擴充**：
+  - 引進全新的 `Note` 與 `Script` 兩套模型，每個盃賽底下都可以分別建立多篇筆記與稿子。
+  - 使用自動化的 `created_at` 與附帶 `onupdate` 特性的 `updated_at` 欄位精準備份文本的建置與最後更新時間。
+- **沉浸式頁籤設計**：
+  - 獨立出「筆記庫」與「稿子庫」兩個全螢幕頁籤版塊。
+  - **動線邏輯**：點入頁籤後只見乾淨的清單與其時間戳記。點擊目標後，列表就會立即隱藏，提供沉浸式的圖文編輯模式，點擊「返回」後才會返回目錄，大幅提升了長篇文章的整理舒適度。
+- **格式規範與字數估算器**：
+  - 筆記區支援並能預覽 Markdown 語法；稿子區則嚴格限定為純文字輸入。
+  - 稿子區的編輯器會動態讀取目前的 `len()` 字串長度，透過即時的 `目前字數: XXX 字` 指引幫助講者把控演講時間。
+
