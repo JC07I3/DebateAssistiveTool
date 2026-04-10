@@ -75,36 +75,7 @@ def load_data(comp_name):
     st.session_state.data_grid = ret
     st.session_state.needs_refresh = False
 
-# ----- 側邊欄：盃賽管理 -----
-my_contests = get_contests(st.session_state.current_user_id)
-if not my_contests:
-    comp_name = st.sidebar.selectbox("盃賽", ["目前無盃賽"], disabled=True, key="current_comp_ui")
-else:
-    comp_name = st.sidebar.selectbox("盃賽", my_contests, index=0, key="current_comp_ui")
-
-if "current_comp" not in st.session_state or st.session_state.current_comp != comp_name:
-    st.session_state.current_comp = comp_name
-    st.session_state.needs_refresh = True
-
-st.sidebar.markdown("---")
-enter_comp_option = st.sidebar.text_input("新增盃賽")
-if st.sidebar.button("建立盃賽", use_container_width=True):
-    if enter_comp_option:
-        if enter_comp_option in my_contests:
-            st.sidebar.warning("盃賽已存在")
-        else:
-            add_contest(enter_comp_option, st.session_state.current_user_id)
-            st.session_state.needs_refresh = True
-            st.rerun()
-    else:
-        st.sidebar.warning("請輸入盃賽名稱")
-
-st.sidebar.markdown("---")
-
-if st.session_state.needs_refresh and comp_name and comp_name != "目前無盃賽":
-    load_data(comp_name)
-
-# ---- 權限與側邊欄登出 ----
+# ----- 側邊欄：使用者與盃賽管理 -----
 st.sidebar.markdown(f"**目前身份：{st.session_state.current_username}**")
 if st.sidebar.button("登出", use_container_width=True):
     st.session_state.current_user_id = None
@@ -112,18 +83,50 @@ if st.sidebar.button("登出", use_container_width=True):
     st.rerun()
 
 st.sidebar.divider()
-st.sidebar.markdown("### 協作權限")
-if comp_name and comp_name != "目前無盃賽":
-    target_uname = st.sidebar.text_input("分享此盃賽給使用者 (輸入帳號)", help="目標使用者登入後也能檢視並編輯本盃賽內容")
-    if st.sidebar.button("加入協作者", use_container_width=True):
-        if target_uname:
-            success, msg = share_contest(comp_name, target_uname)
-            if success:
-                st.sidebar.success(msg)
+
+my_contests = get_contests(st.session_state.current_user_id)
+if not my_contests:
+    comp_name = st.sidebar.selectbox("資料庫 (盃賽)", ["目前無盃賽"], disabled=True, key="current_comp_ui")
+else:
+    comp_name = st.sidebar.selectbox("資料庫 (盃賽)", my_contests, index=0, key="current_comp_ui")
+
+if "current_comp" not in st.session_state or st.session_state.current_comp != comp_name:
+    st.session_state.current_comp = comp_name
+    st.session_state.needs_refresh = True
+
+if st.session_state.needs_refresh and comp_name and comp_name != "目前無盃賽":
+    load_data(comp_name)
+
+st.sidebar.write("")
+with st.sidebar.expander("🛠️ 盃賽管理與設定", expanded=False):
+    st.markdown("##### 新增盃賽")
+    enter_comp_option = st.text_input("輸入盃賽名稱", label_visibility="collapsed")
+    if st.button("建立盃賽", use_container_width=True):
+        if enter_comp_option:
+            if enter_comp_option in my_contests:
+                st.warning("盃賽已存在")
             else:
-                st.sidebar.error(msg)
+                add_contest(enter_comp_option, st.session_state.current_user_id)
+                st.session_state.needs_refresh = True
+                st.rerun()
         else:
-            st.sidebar.warning("請輸入帳號")
+            st.warning("請輸入盃賽名稱")
+            
+    st.divider()
+    st.markdown("##### 協作權限")
+    if comp_name and comp_name != "目前無盃賽":
+        target_uname = st.text_input("分享此盃賽給使用者 (輸入帳號)", help="目標使用者登入後也能檢視並編輯本盃賽內容")
+        if st.button("加入協作者", use_container_width=True):
+            if target_uname:
+                success, msg = share_contest(comp_name, target_uname)
+                if success:
+                    st.success(msg)
+                else:
+                    st.error(msg)
+            else:
+                st.warning("請輸入帳號")
+    else:
+        st.info("請先建立並選取盃賽")
 
 # ----- 主頁面：檢視、儲存與數據分析 -----
 note_tab, script_tab, grid_tab, chart_tab, store_tab = st.tabs(["筆記管理", "稿子庫", "檢視資料", "數據分析", "儲存資料"])
@@ -245,6 +248,38 @@ with store_tab:
                 st.session_state.needs_refresh = True
                 st.session_state.last_choose_side = SIDE_OPTIONS.index(side_chosen)
                 st.success("資料新增成功！請至「檢視資料」查看。")
+
+    st.write("---")
+    st.write("### 🏷️ 標籤管理")
+    tag_col1, tag_col2 = st.columns(2)
+    with tag_col1:
+        with st.container(border=True):
+            st.markdown("#### 新增標籤")
+            new_tag = st.text_input("輸入新標籤", label_visibility="collapsed")
+            if st.button("新增", use_container_width=True):
+                if "$" in new_tag:
+                    st.warning("標籤不能包含 $ 符號")
+                elif new_tag == "":
+                    st.warning("標籤不能為空")
+                elif new_tag not in get_tags(comp_name):
+                    add_tag(new_tag, comp_name)
+                    st.session_state.needs_refresh = True
+                    st.rerun()
+                else:
+                    st.warning("標籤已存在")
+                    
+    with tag_col2:
+        with st.container(border=True):
+            st.markdown("#### 刪除標籤")
+            delet_tag_form = st.form(key="delete_tag", clear_on_submit=False)
+            with delet_tag_form:
+                tag_to_delete = st.multiselect("刪除標籤 (可多選)", get_tags(comp_name), label_visibility="collapsed")
+                if delet_tag_form.form_submit_button("確認刪除", use_container_width=True):
+                    if tag_to_delete:
+                        for i in tag_to_delete:
+                            remove_tag(i, comp_name)
+                        st.session_state.needs_refresh = True
+                        st.rerun()
 
 # ----- 筆記庫 -----
 with note_tab:
@@ -401,29 +436,4 @@ with chart_tab:
                     st.info("目前所有資料皆無綁定標籤。")
 
 
-# ----- 側邊欄：標籤管理 -----
-st.sidebar.divider()
-st.sidebar.markdown("### 標籤管理")
 
-new_tag = st.sidebar.text_input("輸入新標籤")
-if st.sidebar.button("新增標籤", use_container_width=True):
-    if "$" in new_tag:
-        st.sidebar.warning("標籤不能包含 $ 符號")
-    elif new_tag == "":
-        st.sidebar.warning("標籤不能為空")
-    elif new_tag not in get_tags(comp_name):
-        add_tag(new_tag, comp_name)
-        st.session_state.needs_refresh = True
-        st.rerun()
-    else:
-        st.sidebar.warning("標籤已存在")
-
-delet_tag_form = st.sidebar.form(key="delete_tag", clear_on_submit=False)
-with delet_tag_form:
-    tag_to_delete = st.multiselect("刪除標籤 (可多選)", get_tags(comp_name))
-    if delet_tag_form.form_submit_button("確認刪除", use_container_width=True):
-        if tag_to_delete:
-            for i in tag_to_delete:
-                remove_tag(i, comp_name)
-            st.session_state.needs_refresh = True
-            st.rerun()
